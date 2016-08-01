@@ -116,19 +116,19 @@
     <form>
         <input class="form-control" name="id" type="hidden" value="">
         <div class="form-group">
-            <label for="">First Name</label>
+            <label for="">Title</label>
             <input class="form-control" id="title" name="title" type="text" value="<%- title %>">
         </div>
         <div class="form-group">
-            <label for="">Last Name</label>
+            <label for="">Author</label>
             <input class="form-control" name="author" type="text" value="<%- author %>">
         </div>
         <div class="form-group">
-            <label for="">Email</label>
+            <label for="">Year</label>
             <input class="form-control" name="year" type="text" value="<%- year %>">
         </div>
         <div class="form-group">
-            <label for="">Email</label>
+            <label for="">Genre</label>
             <input class="form-control" name="genre" type="text" value="<%- genre %>">
         </div>
         <input class="btn btn-primary js-save" type="submit" value="Save">
@@ -514,7 +514,6 @@
         },
         createBook: function () {
             var createBookview = new createBook({model: new Book()});
-
             app.main.show(createBookview);
         }
     };
