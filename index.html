@@ -170,7 +170,7 @@
             Controller.showBooks();
         },
         createBook: function () {
-            Controller.CreateBook();
+            Controller.createBook();
         }
     };
 
@@ -193,7 +193,7 @@
         });
     });
 
-    app.on('create:books', function () {
+    app.on('create:book', function () {
         Backbone.history.navigate('book/create', {
             trigger: true
         });
@@ -513,7 +513,7 @@
             app.main.show(booksView);
         },
         createBook: function () {
-            var createBookview = new createBook({model: new Book()});
+            var createBookview = new CreateBook({model: new Book()});
             app.main.show(createBookview);
         }
     };
