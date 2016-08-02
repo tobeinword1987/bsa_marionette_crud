@@ -68,7 +68,7 @@
         <button class="btn btn-small btn-success js-show">Show</button>
         <button class="btn btn-small btn-warning js-edit">Edit</button>
         <button class="btn btn-small btn-default js-give">Give a free book</button>
-        <button class="btn btn-small btn-danger pull-right js-delete">Delete</button>
+        <button id="book_del_button" class="btn btn-small btn-danger pull-right js-delete">Delete</button>
 
     </td>
 
@@ -401,6 +401,33 @@
     var BookInTable = Marionette.ItemView.extend({
         tagName: 'tr',
         template: '#books-table-row-template',
+        ui: {
+            delete: '#book_del_button',
+            err: '.js-errors'
+        },
+        events: {
+            'click @ui.delete': function (e) {
+                e.preventDefault();
+                var view = this;
+                var book = this.model;
+                var userId = book.get('user_id');
+                if (userId!=null) {
+                    alert('Эту книгу нельзя удалить. Она находится у пользователя c ID=' + userId +'!');
+                }
+                else
+                {
+                    book.destroy({
+                        error: function (model, response, options)
+                        {
+                             alert(response.responseJSON.data.description);
+                        },
+                        success: function (){
+                            alert('Вы успешно удалили книгу');
+                        }
+                    });
+                }
+            }
+        }
     });
 
     var Books = Marionette.CompositeView.extend({
