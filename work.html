@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <link type="text/css" rel="stylesheet" href="https://bootswatch.com/journal/bootstrap.min.css">
     <script src="src/library/jquery-3.1.0.js"></script>
-    <script src="src/library/underscore.js"></script>
+    <script src="/src/library/underscore.js"></script>
     <script src="src/library/backbone.js"></script>
     <script src="src/library/backbone.marionette.js"></script>
     <title>Title</title>
@@ -40,12 +40,10 @@
     <td><%- firstname %></td>
     <td><%- lastname %></td>
     <td><%- email %></td>
-    <td><%- bookscount %></td>
-    <td></td>
     <td>
-        <button class="btn btn-small btn-success js-show">Show</button>
+        <button id="showUsersBooks" class="btn btn-small btn-success js-return">Return a book</button>
+        <button id="showFreeBooks" class="btn btn-small btn-default js-give">Take a free book</button>
         <button class="btn btn-small btn-warning js-edit">Edit</button>
-        <button class="btn btn-small btn-default js-give">Give a free book</button>
         <button class="btn btn-small btn-danger pull-right js-delete">Delete</button>
 
     </td>
@@ -65,12 +63,12 @@
     <td><%- author %></td>
     <td><%- genre %></td>
     <td><%- year %></td>
-    <td></td>
+    <td><%- user_id %></td>
     <td>
-        <button class="btn btn-small btn-success js-show">Show</button>
+        <!--<button class="btn btn-small btn-success js-show">Show</button>-->
         <button class="btn btn-small btn-warning js-edit">Edit</button>
-        <button class="btn btn-small btn-default js-give">Give a free book</button>
-        <button class="btn btn-small btn-danger pull-right js-delete">Delete</button>
+        <!--<button class="btn btn-small btn-default js-give">Give a free book</button>-->
+        <button id="book_del_button" class="btn btn-small btn-danger pull-right js-delete">Delete</button>
 
     </td>
 
@@ -91,9 +89,21 @@
 
     </tbody>
 </script>
+
+<script type="text/html" id="user-books-table-row-template">
+    <td><%- title %></td>
+    <td><%- author %></td>
+    <td><%- genre %></td>
+    <td><%- year %></td>
+    <td><%- user_id %></td>
+    <td>
+        <button class="btn btn-small btn-warning js-edit">return</button>
+    </td>
+</script>
+
 <script type="text/html" id="create-user-template">
     <form>
-        <input class="form-control" name="id" type="hidden" value="<%- id %>">
+        <input class="form-control" name="id" type="hidden" value="">
         <div class="form-group">
             <label for="">First Name</label>
             <input class="form-control" id="firstname" name="firstname" type="text" value="<%- firstname %>">
@@ -112,7 +122,32 @@
 
     <div class="js-errors"></div>
 </script>
-<script type="text/html" id=""></script>
+
+
+<script type="text/html" id="create-book-template">
+    <form>
+        <input class="form-control" name="id" type="hidden" value="">
+        <div class="form-group">
+            <label for="">Title</label>
+            <input class="form-control" id="title" name="title" type="text" value="<%- title %>">
+        </div>
+        <div class="form-group">
+            <label for="">Author</label>
+            <input class="form-control" name="author" type="text" value="<%- author %>">
+        </div>
+        <div class="form-group">
+            <label for="">Year</label>
+            <input class="form-control" name="year" type="text" value="<%- year %>">
+        </div>
+        <div class="form-group">
+            <label for="">Genre</label>
+            <input class="form-control" name="genre" type="text" value="<%- genre %>">
+        </div>
+        <input class="btn btn-primary js-save" type="submit" value="Save">
+    </form>
+    <div class="js-errors"></div>
+</script>
+
 <script type="text/html" id=""></script>
 <script type="text/html" id=""></script>
 <script type="text/html" id=""></script>
@@ -132,7 +167,10 @@
             'user/create': 'createUser',
 
             'book': 'showBooks',
-            'book/create': 'createBook'
+            'book/create': 'createBook',
+
+            'book/showFreeBooks' : 'showFreeBooks',
+            'book/showUsersBooks' : 'showUsersBooks'
         }
     });
 
@@ -147,7 +185,15 @@
             Controller.showBooks();
         },
         createBook: function () {
-            Controller.CreateBook();
+            Controller.createBook();
+        },
+
+        showFreeBooks: function () {
+            Controller.showFreeBooks();
+        },
+
+        showUsersBooks: function () {
+            Controller.showUsersBooks();
         }
     };
 
@@ -170,8 +216,20 @@
         });
     });
 
-    app.on('create:books', function () {
+    app.on('create:book', function () {
         Backbone.history.navigate('book/create', {
+            trigger: true
+        });
+    });
+
+    app.on('show:freeBooks', function () {
+        Backbone.history.navigate('book/:id/showFreeBooks', {
+            trigger: true
+        });
+    });
+
+    app.on('show:usersBooks', function () {
+        Backbone.history.navigate('book/showUsersBooks', {
             trigger: true
         });
     });
@@ -219,12 +277,31 @@
                 year: ''
             }
         },
-        validate: function (attrs, options) {
-            var errors = [];
-            if(!attrs.firstname) errors.firstname = 'Fill firstname!';
-            if(!attrs.lastname) errors.lastname = 'Fill lastname!';
-            if(!attrs.email) errors.email = 'Fill email!';
-            if(!_.isEmpty(errors)) {
+        validate: function(attrs, options) {
+            var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+            var reAplpha=/^[A-Za-zА-Яа-я]*$/;
+
+            var errors = {}
+            if (! attrs.firstname) {
+                errors.firstname = "FirstName can't be blank";
+            }
+            if (! attrs.lastname) {
+                errors.lastname = "Lastname can't be blank";
+            }
+            else if(!reAplpha.test(attrs.lastname))
+            {
+                errors.lastname='Lastname has to contain only letters';
+            }
+
+            if (! attrs.email) {
+                errors.email = "Email can't be blank";
+            }
+            else
+            if(!re.test(attrs.email))
+            {
+                errors.email = "Email is invalid";
+            }
+            if( ! _.isEmpty(errors)){
                 return errors;
             }
         }
@@ -235,6 +312,32 @@
         model: User,
         url: 'http://bsa_laravel_rest.local/users'
     });
+
+    //model книга пользователя
+    var UsersBook = Backbone.Model.extend({
+        urlRoot: 'http://bsa_laravel_rest.local/users/:id',
+        defaults: {
+            id: '',
+            firstname: '',
+            lastname: '',
+            email: '',
+            books: {
+                id: '',
+                title: '',
+                author: '',
+                genre: '',
+                year: ''
+            }
+        }
+    });
+
+
+    //model список книг пользователей
+    var UsersBookCollection = Backbone.Collection.extend({
+        model: UsersBook,
+        url: 'http://bsa_laravel_rest.local/users/:id',
+    });
+
 
     //model
     var Book = Backbone.Model.extend({
@@ -251,6 +354,46 @@
                 lastname: '',
                 email: ''
             }
+        },
+        validate: function(attrs, options) {
+            var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+            var reAplpha=/^[A-Za-zА-Яа-я]*$/;
+            var reYear=/^[0-9]*$/;
+
+            var errors = {}
+            if (! attrs.title) {
+                errors.title = "Title can't be blank";
+            }
+            if (! attrs.author) {
+                errors.author = "Author can't be blank";
+            }
+            else if(!reAplpha.test(attrs.author))
+            {
+                errors.author='Lastname has to contain only letters';
+            }
+            if (! attrs.genre) {
+                errors.genre = "Genre can't be blank";
+            }
+            else if(!reAplpha.test(attrs.genre))
+            {
+                errors.genre='Genre has to contain only letters';
+            }
+
+            if (! attrs.year) {
+                errors.year = "Year can't be blank";
+            }
+            else
+            if(!reYear.test(attrs.year))
+            {
+                errors.year = "Year is invalid";
+            }
+            else if ((attrs.year<100) || (attrs.year>2016))
+            {
+                errors.year = "The year must be at least 1000 and may not be greater than 2016";
+            }
+            if( ! _.isEmpty(errors)){
+                return errors;
+            }
         }
     });
 
@@ -264,7 +407,20 @@
     //template
     var UserInTable = Marionette.ItemView.extend({
         tagName: 'tr',
-        template: '#users-table-row-template'
+        template: '#users-table-row-template',
+        ui: {
+            showFreeBooks: '#showFreeBooks',
+            showUsersBooks: '#showUsersBooks',
+        },
+        events: {
+            'click @ui.showFreeBooks': function () {
+                app.trigger('show:freeBooks');
+            },
+
+            'click @ui.showUsersBooks': function () {
+                app.trigger('show:usersBooks');
+            },
+        },
     });
 
     //template
@@ -273,6 +429,25 @@
         className: 'table table-striped table-hover table-bordered',
         template: '#users-table-template',
         childView: UserInTable,
+        itemViewContainer: 'tbody'
+    });
+
+    //template вывод книги пользователя в таблице
+    var UsersBookInTable = Marionette.ItemView.extend({
+        tagName: 'tr',
+        template: '#user-books-table-row-template',
+        ui: {
+        },
+        events: {
+        },
+    });
+
+    //template вывод всех книг пользователя в таблице
+    var UsersBooks = Marionette.CompositeView.extend({
+        tagName: 'table',
+        className: 'table table-striped table-hover table-bordered',
+        template: '#users-table-template',
+        childView: UsersBookInTable,
         itemViewContainer: 'tbody'
     });
 
@@ -300,24 +475,52 @@
                 if(user.save({
                             firstname: firstname,
                             lastname: lastname,
-                            email: email
+                            email: email,
                         })){
+                    view.ui.err.append('<ul>');
+                    view.ui.err.find('ul').append('<li>' + 'Вы создали нового пользователя!' + '</li>');
                 } else {
                     //вызывается если модель не прошла валидацию
-                    //var errors = this.model.validationError; //array
+                    var errors = this.model.validationError; //array
                     view.ui.err.append('<ul>');
                     $.each(user.validationError, function (key, value) {
                         view.ui.err.find('ul').append('<li>' + value + '</li>');
-                    })//chto eshe
+                    })
                 }
             }
         }
-
     });
 
     var BookInTable = Marionette.ItemView.extend({
         tagName: 'tr',
-        template: '#books-table-row-template'
+        template: '#books-table-row-template',
+        ui: {
+            delete: '#book_del_button',
+            err: '.js-errors'
+        },
+        events: {
+            'click @ui.delete': function (e) {
+                e.preventDefault();
+                var view = this;
+                var book = this.model;
+                var userId = book.get('user_id');
+                if (userId!=null) {
+                    alert('Эту книгу нельзя удалить. Она находится у пользователя c ID=' + userId +'!');
+                }
+                else
+                {
+                    book.destroy({
+                        error: function (model, response, options)
+                        {
+                            alert(response.responseJSON.data.description);
+                        },
+                        success: function (){
+                            alert('Вы успешно удалили книгу');
+                        }
+                    });
+                }
+            }
+        }
     });
 
     var Books = Marionette.CompositeView.extend({
@@ -326,6 +529,48 @@
         template: '#books-table-template',
         childView: BookInTable,
         itemViewContainer: 'tbody'
+    });
+
+    var CreateBook = Marionette.ItemView.extend({
+        template: '#create-book-template',
+        ui: {
+            save: '.js-save',
+            form: 'form',
+            err: '.js-errors'
+        },
+        modelEvents: {
+            'change': 'render'
+        },
+        events: {
+            'click @ui.save': function (e) {
+                e.preventDefault();
+                var view = this;
+                var book = this.model;
+                this.ui.err.empty();
+                var title = this.ui.form.find("input[name='title']").val();
+                var author = this.ui.form.find("input[name='author']").val();
+                var year = this.ui.form.find("input[name='year']").val();
+                var genre = this.ui.form.find("input[name='genre']").val();
+                this.model.unset('id');
+
+                if(book.save({
+                            title: title,
+                            author: author,
+                            year: year,
+                            genre:genre,
+                        })){
+                    view.ui.err.append('<ul>');
+                    view.ui.err.find('ul').append('<li>' + 'Вы создали новую книгу!' + '</li>');
+                } else {
+                    //вызывается если модель не прошла валидацию
+                    var errors = this.model.validationError; //array
+                    view.ui.err.append('<ul>');
+                    $.each(book.validationError, function (key, value) {
+                        view.ui.err.find('ul').append('<li>' + value + '</li>');
+                    })
+                }
+            }
+        }
     });
 
 
@@ -338,7 +583,8 @@
         ui: {
             showUsers: '.js-users',
             showBooks: '.js-books',
-            createUser: '.js-add-user'
+            createUser: '.js-add-user',
+            createBook: '.js-add-book'
         },
         events: {
             'click @ui.showUsers': function () {
@@ -350,6 +596,9 @@
             },
             'click @ui.createUser': function () {
                 app.trigger('create:user');
+            },
+            'click @ui.createBook': function () {
+                app.trigger('create:book');
             }
         }
 
@@ -384,7 +633,23 @@
             app.main.show(booksView);
         },
         createBook: function () {
+            var createBookview = new CreateBook({model: new Book()});
+            app.main.show(createBookview);
+        },
 
+        showFreeBooks: function(){
+
+        },
+
+        showUsersBooks: function(){
+            var usersbooks = new UsersBookCollection({
+            });
+            usersbooks.fetch();
+
+            var usersbooksview=new UsersBooks({
+                collection:usersbooks,
+            });
+            app.main.show(usersbooksview);
         }
     };
 

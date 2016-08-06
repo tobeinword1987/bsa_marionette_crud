@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <link type="text/css" rel="stylesheet" href="https://bootswatch.com/journal/bootstrap.min.css">
     <script src="src/library/jquery-3.1.0.js"></script>
-    <script src="/src/library/underscore.js"></script>
+    <script src="src/library/underscore.js"></script>
     <script src="src/library/backbone.js"></script>
     <script src="src/library/backbone.marionette.js"></script>
     <title>Title</title>
@@ -136,7 +136,28 @@
     <div class="js-errors"></div>
 </script>
 
-<script type="text/html" id=""></script>
+<script type="text/html" id="give-book">
+    <form>
+        <div class="form-group">
+            <label for="">Info</label>
+            <input class="form-control" readonly="readonly" name="info" type="text" value="<%- user.firstname %> <%- user.lastname %>, <%- user.email %>">
+        </div>
+
+        <div class="form-group">
+            <select class="form-control" name="select" id="select">
+                <option value="0"></option>
+                <%
+                _.each(books, function(book, key){ %>
+                <option value="<%- book.id %>"><%- book.title %> <%- book.author %> <%- book.genre %> <%- book.year %></option>
+                <%
+                ;
+                });
+                %>
+            </select>
+        </div>
+        <input class="btn btn-primary js-submit" type="submit" value="Save">
+    </form>
+</script>
 <script type="text/html" id=""></script>
 <script type="text/html" id=""></script>
 
@@ -153,7 +174,7 @@
         appRoutes: {
             'user': 'showUsers',
             'user/create': 'createUser',
-
+            'user/:id/give': 'giveBook',
             'book': 'showBooks',
             'book/create': 'createBook'
         }
@@ -171,12 +192,22 @@
         },
         createBook: function () {
             Controller.createBook();
+        },
+        giveBook: function (id) {
+            Controller.giveBook(id);
         }
     };
 
 
     app.on('show:users', function () {
         Backbone.history.navigate('user', {
+            trigger: true
+        });
+    });
+
+    app.on('give:book', function (id) {
+
+        Backbone.history.navigate('user/' + id + '/give', {
             trigger: true
         });
     });
@@ -242,31 +273,28 @@
                 year: ''
             }
         },
-        validate: function(attrs, options) {
+        validate: function (attrs, options) {
             var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-            var reAplpha=/^[A-Za-zА-Яа-я]*$/;
+            var reAplpha = /^[A-Za-zА-Яа-я]*$/;
 
             var errors = {}
-            if (! attrs.firstname) {
+            if (!attrs.firstname) {
                 errors.firstname = "FirstName can't be blank";
             }
-            if (! attrs.lastname) {
+            if (!attrs.lastname) {
                 errors.lastname = "Lastname can't be blank";
             }
-            else if(!reAplpha.test(attrs.lastname))
-            {
-                errors.lastname='Lastname has to contain only letters';
+            else if (!reAplpha.test(attrs.lastname)) {
+                errors.lastname = 'Lastname has to contain only letters';
             }
 
-            if (! attrs.email) {
+            if (!attrs.email) {
                 errors.email = "Email can't be blank";
             }
-            else
-            if(!re.test(attrs.email))
-            {
+            else if (!re.test(attrs.email)) {
                 errors.email = "Email is invalid";
             }
-            if( ! _.isEmpty(errors)){
+            if (!_.isEmpty(errors)) {
                 return errors;
             }
         }
@@ -294,43 +322,38 @@
                 email: ''
             }
         },
-        validate: function(attrs, options) {
+        validate: function (attrs, options) {
             var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-            var reAplpha=/^[A-Za-zА-Яа-я]*$/;
-            var reYear=/^[0-9]*$/;
+            var reAplpha = /^[A-Za-zА-Яа-я]*$/;
+            var reYear = /^[0-9]*$/;
 
             var errors = {}
-            if (! attrs.title) {
+            if (!attrs.title) {
                 errors.title = "Title can't be blank";
             }
-            if (! attrs.author) {
+            if (!attrs.author) {
                 errors.author = "Author can't be blank";
             }
-            else if(!reAplpha.test(attrs.author))
-            {
-                errors.author='Lastname has to contain only letters';
+            else if (!reAplpha.test(attrs.author)) {
+                errors.author = 'Lastname has to contain only letters';
             }
-            if (! attrs.genre) {
+            if (!attrs.genre) {
                 errors.genre = "Genre can't be blank";
             }
-            else if(!reAplpha.test(attrs.genre))
-            {
-                errors.genre='Genre has to contain only letters';
+            else if (!reAplpha.test(attrs.genre)) {
+                errors.genre = 'Genre has to contain only letters';
             }
 
-            if (! attrs.year) {
+            if (!attrs.year) {
                 errors.year = "Year can't be blank";
             }
-            else
-            if(!reYear.test(attrs.year))
-            {
+            else if (!reYear.test(attrs.year)) {
                 errors.year = "Year is invalid";
             }
-            else if ((attrs.year<100) || (attrs.year>2016))
-            {
+            else if ((attrs.year < 100) || (attrs.year > 2016)) {
                 errors.year = "The year must be at least 1000 and may not be greater than 2016";
             }
-            if( ! _.isEmpty(errors)){
+            if (!_.isEmpty(errors)) {
                 return errors;
             }
         }
@@ -346,7 +369,15 @@
     //template
     var UserInTable = Marionette.ItemView.extend({
         tagName: 'tr',
-        template: '#users-table-row-template'
+        template: '#users-table-row-template',
+        ui: {
+            give: '.js-give'
+        },
+        events: {
+            'click @ui.give': function () {
+                app.trigger('give:book', this.model.get('id'));
+            }
+        }
     });
 
     //template
@@ -379,11 +410,11 @@
                 var email = this.ui.form.find("input[name='email']").val();
                 this.model.unset('id');
 
-                if(user.save({
-                                firstname: firstname,
-                                lastname: lastname,
-                                email: email,
-                            })){
+                if (user.save({
+                            firstname: firstname,
+                            lastname: lastname,
+                            email: email,
+                        })) {
                     view.ui.err.append('<ul>');
                     view.ui.err.find('ul').append('<li>' + 'Вы создали нового пользователя!' + '</li>');
                 } else {
@@ -411,17 +442,15 @@
                 var view = this;
                 var book = this.model;
                 var userId = book.get('user_id');
-                if (userId!=null) {
-                    alert('Эту книгу нельзя удалить. Она находится у пользователя c ID=' + userId +'!');
+                if (userId != null) {
+                    alert('Эту книгу нельзя удалить. Она находится у пользователя c ID=' + userId + '!');
                 }
-                else
-                {
+                else {
                     book.destroy({
-                        error: function (model, response, options)
-                        {
-                             alert(response.responseJSON.data.description);
+                        error: function (model, response, options) {
+                            alert(response.responseJSON.data.description);
                         },
-                        success: function (){
+                        success: function () {
                             alert('Вы успешно удалили книгу');
                         }
                     });
@@ -436,6 +465,51 @@
         template: '#books-table-template',
         childView: BookInTable,
         itemViewContainer: 'tbody'
+    });
+
+    var GiveBookView = Marionette.ItemView.extend({
+        template: '#give-book',
+        ui: {
+            dropdownlist: '#select',
+            submit: '.js-submit'
+        },
+        events: {
+            'click @ui.submit': function (e) {
+                e.preventDefault();
+
+                var userid = this.model.get('id');
+
+                var book_id = this.ui.dropdownlist.val();
+                if(book_id == '') alert('Choose book');
+                else {
+                    var Book1 = Backbone.Model.extend({
+                        urlRoot: 'http://bsa_laravel_rest.local/users/' + userid+'/books/',
+                        defaults: {
+                            id: '',
+                            title: '',
+                            author: '',
+                            genre: '',
+                            year: '',
+                            user: {
+                                id: '',
+                                firstname: '',
+                                lastname: '',
+                                email: ''
+                            }
+                        }});
+
+                    var book = new Book1({id: book_id});
+
+//                    book.fetch().then(function () {
+                        book.save({user_id: userid}, {validate: false}).
+                        then(function () {
+                            //app.trigger('show:book', book_id) у тебя нету такого обработчика поэтому не направлляет
+                            alert('Book was attached succesfully');
+                        });
+//                    });
+                }
+            }
+        }
     });
 
     var CreateBook = Marionette.ItemView.extend({
@@ -460,12 +534,12 @@
                 var genre = this.ui.form.find("input[name='genre']").val();
                 this.model.unset('id');
 
-                if(book.save({
+                if (book.save({
                             title: title,
                             author: author,
                             year: year,
-                            genre:genre,
-                        })){
+                            genre: genre,
+                        })) {
                     view.ui.err.append('<ul>');
                     view.ui.err.find('ul').append('<li>' + 'Вы создали новую книгу!' + '</li>');
                 } else {
@@ -512,6 +586,12 @@
     });
 
 
+    var User2 = Backbone.Model.extend({
+        url: function () {
+            return 'http://bsa_laravel_rest.local/users/' + this.get('id')+'/books';
+        }
+    });
+
     var Controller = {
         showUsers: function () {
             var users = new UserCollection();
@@ -542,6 +622,17 @@
         createBook: function () {
             var createBookview = new CreateBook({model: new Book()});
             app.main.show(createBookview);
+        },
+        giveBook: function (id) {
+            var user = new User2({id: id});
+            user.fetch().then(function () {
+                var view = new GiveBookView({
+                    model: user
+                });
+                app.main.show(view);
+            }, function () {
+                alert('I can not fetch user');
+            });
         }
     };
 
