@@ -1,0 +1,18 @@
+body {
+    /* 60px to move the container down and
+    * make room for the navigation bar */
+    padding:80px 20px 20px 20px;
+}
+
+thead{
+    background-color: black;
+    color:white;
+}
+
+.error_region{
+    width:80%;
+    background-color: lightblue;
+    color:rebeccapurple;
+    margin:20px 20px 20px 0;
+}
+

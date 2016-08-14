@@ -1,643 +1,135 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <link type="text/css" rel="stylesheet" href="https://bootswatch.com/journal/bootstrap.min.css">
-    <script src="src/library/jquery-3.1.0.js"></script>
-    <script src="src/library/underscore.js"></script>
-    <script src="src/library/backbone.js"></script>
-    <script src="src/library/backbone.marionette.js"></script>
-    <title>Title</title>
+    <meta charset="utf-8">
+    <title>Marionette Contact Manager</title>
+    <link href="./assets/css/bootstrap.css" rel="stylesheet">
+    <link href="./assets/css/application.css" rel="stylesheet">
+    <link href="./assets/css/jquery.flash.css" rel="stylesheet">
 </head>
 <body>
-<div id="header">
 
-</div>
-<div class="col-md-12 col-md-offset-0">
-
-    <div id="main">
-
-
+<script type="text/template" id="menu_template">
+    <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="navbar-inner">
+            <div class="container">
+                <span class="brand" id="users_menu_href">Users</span>
+                <span class="brand" id="books_menu_href">Books</span>
+                <span class="brand" id="add_book_href">Add Book</span>
+                <span class="brand" id="add_user_href">Add User</span>
+            </div>
+        </div>
     </div>
+</script>
 
+<div id="menu-region" class="container">
+    <!--<p>Here is a content for menu</p>-->
 </div>
 
-<script type="text/html" id="users-table-template">
-    <thead>
-    <tr>
-        <th>FirstName:</th>
-        <th>LastName:</th>
-        <th>Email:</th>
-        <th>Books:</th>
-        <th>Action:</th>
-    </tr>
-    </thead>
-    <tbody>
+<div id="error-region" class="error_region">
+</div>
 
-    </tbody>
+<div id="main-region" class="container">
+    <!--<p>Here is dynamic content in the web page</p>-->
+</div>
+
+
+<!--templates---------------------------------------------------------------------->
+
+<script type="text/template" id="allBooksTableHeadTemplate">
+    <table class="table table-striped table-bordered table-hover">
+        <thead>
+        <tr>
+            <td>ID</td>
+            <td>Title</td>
+            <td>Author</td>
+            <td>Year</td>
+            <td>Genre</td>
+            <td>Reader</td>
+            <td>Action</td>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
 </script>
-<script type="text/html" id="users-table-row-template">
-    <td><%- firstname %></td>
-    <td><%- lastname %></td>
-    <td><%- email %></td>
-    <td>
-        <button class="btn btn-small btn-success js-show">Show</button>
-        <button class="btn btn-small btn-warning js-edit">Edit</button>
-        <button class="btn btn-small btn-default js-give">Give a free book</button>
-        <button class="btn btn-small btn-danger pull-right js-delete">Delete</button>
 
+<script type="text/template" id="allUsersTableHeadTemplate">
+    <table class="table table-striped table-bordered table-hover">
+        <thead>
+        <tr>
+            <td>ID</td>
+            <td>Firstname</td>
+            <td>Lastname</td>
+            <td>Email</td>
+            <td>Action</td>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</script>
+
+<script type="text/template" id="allBooksTableTrTemplate">
+    <td><%=id%></td>
+    <td><%=title%></td>
+    <td><%=author%></td>
+    <td><%=year%></td>
+    <td><%=genre%></td>
+    <td><%=user_id%></td>
+    <td>
+        <input type="button" class="btn-primary" id="show_update_book_button" value="Update">
+        <input type="button" class="btn-primary" id="delete_book_button" value="Delete">
     </td>
 </script>
-<script type="text/html" id="header-template">
-    <ul class="nav navbar-nav">
-        <li><a style="cursor: pointer;" class="js-users">Users</a></li>
-        <li><a style="cursor: pointer;" class="js-books">Books</a></li>
-        <li><a style="cursor: pointer;" class="js-add-user">Add User</a></li>
-        <li><a style="cursor: pointer;" class="js-add-book">Add Book</a></li>
-    </ul>
-</script>
 
-<script type="text/html" id="books-table-row-template">
-
-    <td><%- title %></td>
-    <td><%- author %></td>
-    <td><%- genre %></td>
-    <td><%- year %></td>
-    <td><%- user_id %></td>
+<script type="text/template" id="allUsersTableTrTemplate">
+    <td><%=id%></td>
+    <td><%=firstname%></td>
+    <td><%=lastname%></td>
+    <td><%=email%></td>
     <td>
-        <button class="btn btn-small btn-success js-show">Show</button>
-        <button class="btn btn-small btn-warning js-edit">Edit</button>
-        <button class="btn btn-small btn-default js-give">Give a free book</button>
-        <button id="book_del_button" class="btn btn-small btn-danger pull-right js-delete">Delete</button>
-
+        <input type="button" class="btn-primary" id="show_update_user_button" value="Update">
+        <input type="button" class="btn-primary" id="delete_user_button" value="Delete">
+        <input type="button" class="btn-primary" id="show_free_books" value="Free books">
+        <input type="button" class="btn-primary" id="show_users_books" value="Your books">
     </td>
-
 </script>
 
-<script type="text/html" id="books-table-template">
-    <thead>
-    <tr>
-        <th>Title:</th>
-        <th>Author:</th>
-        <th>Genre:</th>
-        <th>Year:</th>
-        <th>Owner:</th>
-        <th>Action:</th>
-    </tr>
-    </thead>
-    <tbody>
-
-    </tbody>
-</script>
-<script type="text/html" id="create-user-template">
-    <form>
-        <input class="form-control" name="id" type="hidden" value="">
-        <div class="form-group">
-            <label for="">First Name</label>
-            <input class="form-control" id="firstname" name="firstname" type="text" value="<%- firstname %>">
-        </div>
-        <div class="form-group">
-            <label for="">Last Name</label>
-            <input class="form-control" name="lastname" type="text" value="<%- lastname %>">
-        </div>
-
-        <div class="form-group">
-            <label for="">Email</label>
-            <input class="form-control" name="email" type="text" value="<%- email %>">
-        </div>
-        <input class="btn btn-primary js-save" type="submit" value="Save">
-    </form>
-
-    <div class="js-errors"></div>
+<script type="text/template" id="add_book_template">
+    <label for="addNewTitle">Enter the title</label>
+    <input type="text" id="addNewTitle" class="text-info" class="form-control" value="">
+    <label for="addNewAuthor">Enter the author</label>
+    <input type="text" id="addNewAuthor" class="text-info" class="form-control" value="">
+    <label for="addNewYear">Enter the year</label>
+    <input type="text" id="addNewYear" class="text-info" class="form-control" value="">
+    <label for="addNewGenre">Enter the genre</label>
+    <input type="text" id="addNewGenre" class="form-control" value="">
+    <div>
+        <input type="button" class="btn-info" id="add_book_button" value="Add Book">
+    </div>
 </script>
 
-
-<script type="text/html" id="create-book-template">
-    <form>
-        <input class="form-control" name="id" type="hidden" value="">
-        <div class="form-group">
-            <label for="">Title</label>
-            <input class="form-control" id="title" name="title" type="text" value="<%- title %>">
-        </div>
-        <div class="form-group">
-            <label for="">Author</label>
-            <input class="form-control" name="author" type="text" value="<%- author %>">
-        </div>
-        <div class="form-group">
-            <label for="">Year</label>
-            <input class="form-control" name="year" type="text" value="<%- year %>">
-        </div>
-        <div class="form-group">
-            <label for="">Genre</label>
-            <input class="form-control" name="genre" type="text" value="<%- genre %>">
-        </div>
-        <input class="btn btn-primary js-save" type="submit" value="Save">
-    </form>
-    <div class="js-errors"></div>
+<script type="text/template" id="add_user_template">
+    <label for="addNewFirstname">Enter the firstname of user</label>
+    <input type="text" id="addNewFirstname" class="text-info" class="form-control" value="">
+    <label for="addNewLastname">Enter the lastname of user</label>
+    <input type="text" id="addNewLastname" class="text-info" class="form-control" value="">
+    <label for="addNewEmail">Enter the email of user</label>
+    <input type="text" id="addNewEmail" class="text-info" class="form-control" value="">
+    <div>
+        <input type="button" class="btn-info" id="add_user_button" value="Add User">
+    </div>
 </script>
 
-<script type="text/html" id="give-book">
-    <form>
-        <div class="form-group">
-            <label for="">Info</label>
-            <input class="form-control" readonly="readonly" name="info" type="text" value="<%- user.firstname %> <%- user.lastname %>, <%- user.email %>">
-        </div>
-
-        <div class="form-group">
-            <select class="form-control" name="select" id="select">
-                <option value="0"></option>
-                <%
-                _.each(books, function(book, key){ %>
-                <option value="<%- book.id %>"><%- book.title %> <%- book.author %> <%- book.genre %> <%- book.year %></option>
-                <%
-                ;
-                });
-                %>
-            </select>
-        </div>
-        <input class="btn btn-primary js-submit" type="submit" value="Save">
-    </form>
-</script>
-<script type="text/html" id=""></script>
-<script type="text/html" id=""></script>
-
-<script type="application/javascript">
-
-    var app = new Marionette.Application();
-
-    app.addRegions({
-        main: '#main',
-        header: '#header'
-    });
-
-    app.Router = Marionette.AppRouter.extend({
-        appRoutes: {
-            'user': 'showUsers',
-            'user/create': 'createUser',
-            'user/:id/give': 'giveBook',
-            'book': 'showBooks',
-            'book/create': 'createBook'
-        }
-    });
-
-    routerAPI = {
-        showUsers: function () {
-            Controller.showUsers();
-        },
-        createUser: function () {
-            Controller.createUser();
-        },
-        showBooks: function () {
-            Controller.showBooks();
-        },
-        createBook: function () {
-            Controller.createBook();
-        },
-        giveBook: function (id) {
-            Controller.giveBook(id);
-        }
-    };
-
-
-    app.on('show:users', function () {
-        Backbone.history.navigate('user', {
-            trigger: true
-        });
-    });
-
-    app.on('give:book', function (id) {
-
-        Backbone.history.navigate('user/' + id + '/give', {
-            trigger: true
-        });
-    });
-
-    app.on('create:user', function () {
-        Backbone.history.navigate('user/create', {
-            trigger: true
-        });
-    });
-
-    app.on('show:books', function () {
-        Backbone.history.navigate('book', {
-            trigger: true
-        });
-    });
-
-    app.on('create:book', function () {
-        Backbone.history.navigate('book/create', {
-            trigger: true
-        });
-    });
-
-    app.on('start', function () {
-        app.getRegion('header').show(new header());
-        new app.Router({
-            controller: routerAPI
-        });
-
-        if (Backbone.history) {
-            Backbone.history.start();
-
-            if (this.getCurrentRoute() === "") {
-                Backbone.history.navigate('user', {
-                    trigger: true
-                });
-            }
-        }
-    });
-
-    app.navigate = function (route, options) {
-        options || (options = {});
-        Backbone.history.navigate(route, options);
-    };
-
-    app.getCurrentRoute = function () {
-        return Backbone.history.fragment
-    };
-
-    //===================models====================
-    //model
-    var User = Backbone.Model.extend({
-        urlRoot: 'http://bsa_laravel_rest.local/users',
-        defaults: {
-            id: '',
-            firstname: '',
-            lastname: '',
-            email: '',
-            books: {
-                id: '',
-                title: '',
-                author: '',
-                genre: '',
-                year: ''
-            }
-        },
-        validate: function (attrs, options) {
-            var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-            var reAplpha = /^[A-Za-zА-Яа-я]*$/;
-
-            var errors = {}
-            if (!attrs.firstname) {
-                errors.firstname = "FirstName can't be blank";
-            }
-            if (!attrs.lastname) {
-                errors.lastname = "Lastname can't be blank";
-            }
-            else if (!reAplpha.test(attrs.lastname)) {
-                errors.lastname = 'Lastname has to contain only letters';
-            }
-
-            if (!attrs.email) {
-                errors.email = "Email can't be blank";
-            }
-            else if (!re.test(attrs.email)) {
-                errors.email = "Email is invalid";
-            }
-            if (!_.isEmpty(errors)) {
-                return errors;
-            }
-        }
-    });
-
-    //model
-    var UserCollection = Backbone.Collection.extend({
-        model: User,
-        url: 'http://bsa_laravel_rest.local/users'
-    });
-
-    //model
-    var Book = Backbone.Model.extend({
-        urlRoot: 'http://bsa_laravel_rest.local/books',
-        defaults: {
-            id: '',
-            title: '',
-            author: '',
-            genre: '',
-            year: '',
-            user: {
-                id: '',
-                firstname: '',
-                lastname: '',
-                email: ''
-            }
-        },
-        validate: function (attrs, options) {
-            var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-            var reAplpha = /^[A-Za-zА-Яа-я]*$/;
-            var reYear = /^[0-9]*$/;
-
-            var errors = {}
-            if (!attrs.title) {
-                errors.title = "Title can't be blank";
-            }
-            if (!attrs.author) {
-                errors.author = "Author can't be blank";
-            }
-            else if (!reAplpha.test(attrs.author)) {
-                errors.author = 'Lastname has to contain only letters';
-            }
-            if (!attrs.genre) {
-                errors.genre = "Genre can't be blank";
-            }
-            else if (!reAplpha.test(attrs.genre)) {
-                errors.genre = 'Genre has to contain only letters';
-            }
-
-            if (!attrs.year) {
-                errors.year = "Year can't be blank";
-            }
-            else if (!reYear.test(attrs.year)) {
-                errors.year = "Year is invalid";
-            }
-            else if ((attrs.year < 100) || (attrs.year > 2016)) {
-                errors.year = "The year must be at least 1000 and may not be greater than 2016";
-            }
-            if (!_.isEmpty(errors)) {
-                return errors;
-            }
-        }
-    });
-
-    var BookCollection = Backbone.Collection.extend({
-        model: Book,
-        url: 'http://bsa_laravel_rest.local/books'
-    });
-
-    //================views===============
-
-    //template
-    var UserInTable = Marionette.ItemView.extend({
-        tagName: 'tr',
-        template: '#users-table-row-template',
-        ui: {
-            give: '.js-give'
-        },
-        events: {
-            'click @ui.give': function () {
-                app.trigger('give:book', this.model.get('id'));
-            }
-        }
-    });
-
-    //template
-    var Users = Marionette.CompositeView.extend({
-        tagName: 'table',
-        className: 'table table-striped table-hover table-bordered',
-        template: '#users-table-template',
-        childView: UserInTable,
-        itemViewContainer: 'tbody'
-    });
-
-    var CreateUser = Marionette.ItemView.extend({
-        template: '#create-user-template',
-        ui: {
-            save: '.js-save',
-            form: 'form',
-            err: '.js-errors'
-        },
-        modelEvents: {
-            'change': 'render'
-        },
-        events: {
-            'click @ui.save': function (e) {
-                e.preventDefault();
-                var view = this;
-                var user = this.model;
-                this.ui.err.empty();
-                var firstname = this.ui.form.find("input[name='firstname']").val();
-                var lastname = this.ui.form.find("input[name='lastname']").val();
-                var email = this.ui.form.find("input[name='email']").val();
-                this.model.unset('id');
-
-                if (user.save({
-                            firstname: firstname,
-                            lastname: lastname,
-                            email: email,
-                        })) {
-                    view.ui.err.append('<ul>');
-                    view.ui.err.find('ul').append('<li>' + 'Вы создали нового пользователя!' + '</li>');
-                } else {
-                    //вызывается если модель не прошла валидацию
-                    var errors = this.model.validationError; //array
-                    view.ui.err.append('<ul>');
-                    $.each(user.validationError, function (key, value) {
-                        view.ui.err.find('ul').append('<li>' + value + '</li>');
-                    })
-                }
-            }
-        }
-    });
-
-    var BookInTable = Marionette.ItemView.extend({
-        tagName: 'tr',
-        template: '#books-table-row-template',
-        ui: {
-            delete: '#book_del_button',
-            err: '.js-errors'
-        },
-        events: {
-            'click @ui.delete': function (e) {
-                e.preventDefault();
-                var view = this;
-                var book = this.model;
-                var userId = book.get('user_id');
-                if (userId != null) {
-                    alert('Эту книгу нельзя удалить. Она находится у пользователя c ID=' + userId + '!');
-                }
-                else {
-                    book.destroy({
-                        error: function (model, response, options) {
-                            alert(response.responseJSON.data.description);
-                        },
-                        success: function () {
-                            alert('Вы успешно удалили книгу');
-                        }
-                    });
-                }
-            }
-        }
-    });
-
-    var Books = Marionette.CompositeView.extend({
-        tagName: 'table',
-        className: 'table table-striped table-hover table-bordered',
-        template: '#books-table-template',
-        childView: BookInTable,
-        itemViewContainer: 'tbody'
-    });
-
-    var GiveBookView = Marionette.ItemView.extend({
-        template: '#give-book',
-        ui: {
-            dropdownlist: '#select',
-            submit: '.js-submit'
-        },
-        events: {
-            'click @ui.submit': function (e) {
-                e.preventDefault();
-
-                var userid = this.model.get('id');
-
-                var book_id = this.ui.dropdownlist.val();
-                if(book_id == '') alert('Choose book');
-                else {
-                    var Book1 = Backbone.Model.extend({
-                        urlRoot: 'http://bsa_laravel_rest.local/users/' + userid+'/books/',
-                        defaults: {
-                            id: '',
-                            title: '',
-                            author: '',
-                            genre: '',
-                            year: '',
-                            user: {
-                                id: '',
-                                firstname: '',
-                                lastname: '',
-                                email: ''
-                            }
-                        }});
-
-                    var book = new Book1({id: book_id});
-
-//                    book.fetch().then(function () {
-                        book.save({user_id: userid}, {validate: false}).
-                        then(function () {
-                            //app.trigger('show:book', book_id) у тебя нету такого обработчика поэтому не направлляет
-                            alert('Book was attached succesfully');
-                        });
-//                    });
-                }
-            }
-        }
-    });
-
-    var CreateBook = Marionette.ItemView.extend({
-        template: '#create-book-template',
-        ui: {
-            save: '.js-save',
-            form: 'form',
-            err: '.js-errors'
-        },
-        modelEvents: {
-            'change': 'render'
-        },
-        events: {
-            'click @ui.save': function (e) {
-                e.preventDefault();
-                var view = this;
-                var book = this.model;
-                this.ui.err.empty();
-                var title = this.ui.form.find("input[name='title']").val();
-                var author = this.ui.form.find("input[name='author']").val();
-                var year = this.ui.form.find("input[name='year']").val();
-                var genre = this.ui.form.find("input[name='genre']").val();
-                this.model.unset('id');
-
-                if (book.save({
-                            title: title,
-                            author: author,
-                            year: year,
-                            genre: genre,
-                        })) {
-                    view.ui.err.append('<ul>');
-                    view.ui.err.find('ul').append('<li>' + 'Вы создали новую книгу!' + '</li>');
-                } else {
-                    //вызывается если модель не прошла валидацию
-                    var errors = this.model.validationError; //array
-                    view.ui.err.append('<ul>');
-                    $.each(book.validationError, function (key, value) {
-                        view.ui.err.find('ul').append('<li>' + value + '</li>');
-                    })
-                }
-            }
-        }
-    });
-
-
-    //template
-    var header = Marionette.ItemView.extend({
-        template: '#header-template',
-        tagName: 'nav',
-        id: 'header',
-        className: 'navbar navbar-inverse',
-        ui: {
-            showUsers: '.js-users',
-            showBooks: '.js-books',
-            createUser: '.js-add-user',
-            createBook: '.js-add-book'
-        },
-        events: {
-            'click @ui.showUsers': function () {
-                app.trigger('show:users');
-            },
-
-            'click @ui.showBooks': function () {
-                app.trigger('show:books');
-            },
-            'click @ui.createUser': function () {
-                app.trigger('create:user');
-            },
-            'click @ui.createBook': function () {
-                app.trigger('create:book');
-            }
-        }
-
-    });
-
-
-    var User2 = Backbone.Model.extend({
-        url: function () {
-            return 'http://bsa_laravel_rest.local/users/' + this.get('id')+'/books';
-        }
-    });
-
-    var Controller = {
-        showUsers: function () {
-            var users = new UserCollection();
-            users.fetch();
-
-            var usersView = new Users({
-                collection: users
-            });
-
-            app.main.show(usersView);
-        },
-        createUser: function () {
-            var view = new CreateUser({model: new User()});
-
-            app.main.show(view);
-        },
-
-        showBooks: function () {
-            var books = new BookCollection();
-
-            books.fetch();
-
-            var booksView = new Books({
-                collection: books
-            });
-            app.main.show(booksView);
-        },
-        createBook: function () {
-            var createBookview = new CreateBook({model: new Book()});
-            app.main.show(createBookview);
-        },
-        giveBook: function (id) {
-            var user = new User2({id: id});
-            user.fetch().then(function () {
-                var view = new GiveBookView({
-                    model: user
-                });
-                app.main.show(view);
-            }, function () {
-                alert('I can not fetch user');
-            });
-        }
-    };
-
-    app.start();
-</script>
+<script src="assets/js/vendor/jquery-3.1.0.js"></script>
+<script src="assets/js/vendor/json2.js"></script>
+<script src="assets/js/vendor/underscore.js"></script>
+<script src="assets/js/vendor/backbone.js"></script>
+<script src="assets/js/vendor/backbone.marionette.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/vendor/jquery.flash.js"></script>
 
 </body>
 </html>
+
