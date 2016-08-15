@@ -400,11 +400,13 @@ ContactManager.AllUsersTableTrView = Marionette.ItemView.extend({
     template: '#allUsersTableTrTemplate',
     ui:{
         delete_user_button:'#delete_user_button',
-        show_update_user_button:'#show_update_user_button'
+        show_update_user_button:'#show_update_user_button',
+        show_free_books:'#show_free_books'
     },
     events:{
         'click @ui.delete_user_button': 'deleteUser',
-        'click @ui.show_update_user_button': 'showUpdateUserView'
+        'click @ui.show_update_user_button': 'showUpdateUserView',
+        'click @ui.show_free_books': 'showFreeBooksView'
     },
     deleteUser:function(){
         console.log(this.model);
@@ -435,6 +437,79 @@ ContactManager.AllUsersTableTrView = Marionette.ItemView.extend({
             model:this.model
         });
         ContactManager.mainRegion.show(showUpdateUserView);
+    },
+    showFreeBooksView:function(){
+
+        ContactManager.FreeBookModel=Backbone.Model.extend({
+            url:'http://bsa_laravel_rest.local/users/'+this.model.get('id')+'/books'
+        })
+
+        ContactManager.AllFreeBooksCollection = Backbone.Collection.extend({
+            url:'http://bsa_laravel_rest.local/users/'+this.model.get('id')+'/books',
+            model: ContactManager.FreeBookModel
+        });
+
+        var user_id=this.model.get('id');
+        var firstname=this.model.get('firstname');
+        var lastname=this.model.get('lastname');
+
+        var allFreeBooksCollection=new ContactManager.AllFreeBooksCollection();
+
+        allFreeBooksCollection.fetch();
+
+        console.log(allFreeBooksCollection);
+
+        ContactManager.AllFreeBooksTableTrView = Marionette.ItemView.extend({
+            tagName: 'tr',
+            model: this.model,
+            template: '#allFreeBooksTRTemplate',
+            ui:{
+                get_book_button:'#get_book_button'
+            },
+            events:{
+                'click @ui.get_book_button':'getFreeBook'
+            },
+            getFreeBook:function () {
+                var book_id=this.model.get('id');
+                var title=this.model.get('title');
+                ContactManager.FreeBookModel=Backbone.Model.extend({
+                    url:'http://bsa_laravel_rest.local/users/'+user_id+'/books/'+book_id});
+
+                var freeBookModel=new ContactManager.FreeBookModel({id:book_id});
+                freeBookModel.fetch();
+                console.log(freeBookModel);
+                freeBookModel.set({user_id:user_id});
+                console.log(freeBookModel);
+                freeBookModel.save({},{
+                    success: function (x) {
+                            $.flash('Читатель '+firstname+' '+lastname+' успешно взял книгу c названием \''+title+'\'');
+                            booksCollection_g.set(freeBookModel,{remove: false},{merge: true});
+
+                            var allBooksTableView = new ContactManager.AllBooksTableView({
+                                collection: booksCollection_g
+                            });
+                            ContactManager.mainRegion.show(allBooksTableView);
+                    },
+                    error: function (x) {
+                        $.flash('Читателю не удалось взять книгу');
+                    }
+                });
+            }
+        });
+
+        ContactManager.AllFreeBooksTableView = Marionette.CompositeView.extend({
+            template: '#allFreeBooksTableHeadTemplate',
+            tagName: "table",
+            className: 'table table-striped table-bordered table-hover',
+            childView: ContactManager.AllFreeBooksTableTrView,
+        });
+
+
+        var allFreeBooksTableView=new ContactManager.AllFreeBooksTableView({
+            collection:allFreeBooksCollection
+        });
+
+        ContactManager.mainRegion.show(allFreeBooksTableView);
     }
 });
 
