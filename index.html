@@ -110,6 +110,20 @@
     </div>
 </script>
 
+<script type="text/template" id="update_book_template">
+    <label for="updateTitle">Enter the title</label>
+    <input type="text" id="updateTitle" class="text-info" class="form-control" value="<%=title%>">
+    <label for="updateAuthor">Enter the author</label>
+    <input type="text" id="updateAuthor" class="text-info" class="form-control" value="<%=author%>">
+    <label for="updateYear">Enter the year</label>
+    <input type="text" id="updateYear" class="text-info" class="form-control" value="<%=year%>">
+    <label for="updateGenre">Enter the genre</label>
+    <input type="text" id="updateGenre" class="form-control" value="<%=genre%>">
+    <div>
+        <input type="button" class="btn-info" id="update_book_button" value="Update Book">
+    </div>
+</script>
+
 <script type="text/template" id="add_user_template">
     <label for="addNewFirstname">Enter the firstname of user</label>
     <input type="text" id="addNewFirstname" class="text-info" class="form-control" value="">
@@ -119,6 +133,18 @@
     <input type="text" id="addNewEmail" class="text-info" class="form-control" value="">
     <div>
         <input type="button" class="btn-info" id="add_user_button" value="Add User">
+    </div>
+</script>
+
+<script type="text/template" id="update_user_template">
+    <label for="updateFirstname">Enter the firstname of user</label>
+    <input type="text" id="updateFirstname" class="text-info" class="form-control" value="<%=firstname%>">
+    <label for="updateLastname">Enter the lastname of user</label>
+    <input type="text" id="updateLastname" class="text-info" class="form-control" value="<%=lastname%>">
+    <label for="updateEmail">Enter the email of user</label>
+    <input type="text" id="updateEmail" class="text-info" class="form-control" value="<%=email%>">
+    <div>
+        <input type="button" class="btn-info" id="update_user_button" value="Update User">
     </div>
 </script>
 

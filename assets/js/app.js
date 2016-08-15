@@ -122,6 +122,10 @@ ContactManager.AddUserModel = Backbone.Model.extend({
         if (!attrs.firstname) {
             errors1.firstname = "FirstName can't be blank";
         }
+        else if (!reAplpha.test(attrs.firstname)) {
+            errors1.firstname = 'Firstname has to contain only letters';
+        }
+
         if (!attrs.lastname) {
             errors1.lastname = "Lastname can't be blank";
         }
@@ -189,15 +193,120 @@ ContactManager.MenuView = Marionette.ItemView.extend({
 
 //    ------------------------------------Books--------------------------------------------------------
 
+ContactManager.UpdateBookView=Marionette.ItemView.extend({
+    template:'#update_book_template',
+    ui:{
+        update_book_button:'#update_book_button'
+    },
+    events:{
+        'click @ui.update_book_button': 'updateBook',
+    },
+    updateBook:function () {
+        var updatebook = new ContactManager.AddBookModel({id:this.model.get('id')});
+        updatebook.fetch();
+        updatebook.set({
+            title: this.$('input[id=updateTitle]').val(),
+            author: this.$('input[id=updateAuthor]').val(),
+            year: this.$('input[id=updateYear]').val(),
+            genre: this.$('input[id=updateGenre]').val()
+        });
+
+        updatebook.save({}, {
+            success: function (x) {
+                var id = updatebook.get('id');
+                if (!_.isEmpty(errors)) {
+                    error_message = '';
+                    for (key in errors) {
+                        error_message = error_message + errors[key] + '<br/>';
+                    }
+                    $.flash(error_message);
+                }
+                else {
+                    $.flash('Книга с названием \'' + updatebook.get('title')+'\' изменена');
+
+                    booksCollection_g.set(updatebook,{remove: false},{merge: true});
+                    var allBooksTableView = new ContactManager.AllBooksTableView({
+                        collection: booksCollection_g
+                    });
+                    ContactManager.mainRegion.show(allBooksTableView);
+                }
+            },
+            error: function (x) {
+                if (!_.isEmpty(errors)) {
+                    error_message = '';
+                    for (key in errors) {
+                        error_message = error_message + errors[key] + '<br/>';
+                    }
+
+                    $.flash(error_message);
+                }
+            }
+        });
+    }
+});
+
+ContactManager.UpdateUserView=Marionette.ItemView.extend({
+    template:'#update_user_template',
+    ui:{
+        update_user_button:'#update_user_button'
+    },
+    events:{
+        'click @ui.update_user_button': 'updateUser',
+    },
+    updateUser:function () {
+        var updateuser = new ContactManager.AddUserModel({id:this.model.get('id')});
+        updateuser.fetch();
+        updateuser.set({
+            firstname: this.$('input[id=updateFirstname]').val(),
+            lastname: this.$('input[id=updateLastname]').val(),
+            email: this.$('input[id=updateEmail]').val(),
+        });
+
+        updateuser.save({}, {
+            success: function (x) {
+                var id = updateuser.get('id');
+                if (!_.isEmpty(errors1)) {
+                    error_message = '';
+                    for (key in errors1) {
+                        error_message = error_message + errors1[key] + '<br/>';
+                    }
+                    $.flash(error_message);
+                }
+                else {
+                    $.flash('Читатель с именем \'' + updateuser.get('firstname')+'\' изменен');
+
+                    usersCollection_g.set(updateuser,{remove: false},{merge: true});
+                    var allUsersTableView = new ContactManager.AllUsersTableView({
+                        collection: usersCollection_g
+                    });
+                    ContactManager.mainRegion.show(allUsersTableView);
+                }
+            },
+            error: function (x) {
+                if (!_.isEmpty(errors1)) {
+                    error_message = '';
+                    for (key in errors1) {
+                        error_message = error_message + errors1[key] + '<br/>';
+                    }
+
+                    $.flash(error_message);
+                }
+            }
+        });
+    }
+});
+
 ContactManager.AllBooksTableTrView = Marionette.ItemView.extend({
     tagName: 'tr',
     model: ContactManager.BookModel,
     template: '#allBooksTableTrTemplate',
     ui:{
-        delete_book_button:'#delete_book_button'
+        delete_book_button:'#delete_book_button',
+        show_update_book_button:'#show_update_book_button'
     },
     events:{
-        'click @ui.delete_book_button': 'deleteBook'
+        'click @ui.delete_book_button': 'deleteBook',
+        'click @ui.show_update_book_button': 'showUpdateBookView'
     },
     deleteBook:function(){
         if(this.model.has('user_id'))
@@ -214,6 +323,13 @@ ContactManager.AllBooksTableTrView = Marionette.ItemView.extend({
                 }
             });
         }
+    },
+    showUpdateBookView:function(){
+        var showUpdateBookView=new ContactManager.UpdateBookView({
+            model:this.model
+        });
+        console.log(this.model);
+        ContactManager.mainRegion.show(showUpdateBookView);
     }
 });
 
@@ -283,10 +399,12 @@ ContactManager.AllUsersTableTrView = Marionette.ItemView.extend({
     model: ContactManager.UserModel,
     template: '#allUsersTableTrTemplate',
     ui:{
-        delete_user_button:'#delete_user_button'
+        delete_user_button:'#delete_user_button',
+        show_update_user_button:'#show_update_user_button'
     },
     events:{
-        'click @ui.delete_user_button': 'deleteUser'
+        'click @ui.delete_user_button': 'deleteUser',
+        'click @ui.show_update_user_button': 'showUpdateUserView'
     },
     deleteUser:function(){
         console.log(this.model);
@@ -307,7 +425,16 @@ ContactManager.AllUsersTableTrView = Marionette.ItemView.extend({
                 }
             })
         }
-
+        var allUsersTableView = new ContactManager.AllUsersTableView({
+            collection: usersCollection_g
+        });
+        ContactManager.mainRegion.show(allUsersTableView);
+    },
+    showUpdateUserView:function(){
+        var showUpdateUserView=new ContactManager.UpdateUserView({
+            model:this.model
+        });
+        ContactManager.mainRegion.show(showUpdateUserView);
     }
 });
 
